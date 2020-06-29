@@ -40,7 +40,7 @@ int main(int argc, char** argv)
         if (argc != 4) {
             printf("Correct command line: ");
             printf("%s <# samples> <# threads> <seed>\n", argv[0]);
-            return -1;
+            MPI_Abort(MPI_COMM_WORLD, -1);
         }
     }
 

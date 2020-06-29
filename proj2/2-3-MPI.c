@@ -79,7 +79,7 @@ int main(int argc, char* argv[]) {
         if (argc != 3) {
             printf("Correct command line: ");
             printf("%s <# threads> <seed>\n", argv[0]);
-            return -1;
+            MPI_Abort(MPI_COMM_WORLD, -1);
         }
     }
 
@@ -156,6 +156,8 @@ int main(int argc, char* argv[]) {
         free(graph -> nodes[i].parents);
     }
     free(graph -> nodes);
+
+    MPI_Finalize();
 
     return 0;
 }

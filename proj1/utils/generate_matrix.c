@@ -69,7 +69,7 @@ int main(int argc, char* argv[]){
     int ksize = atoi(argv[3]);
     int stride = atoi(argv[4]);
     int is_kernel = atoi(argv[6]);
-    int is_pooling;
+    int is_pooling = 0;
 
     if (is_kernel)
         is_pooling = atoi(argv[8]);

@@ -93,7 +93,7 @@ int main(int argc, char *argv[]) {
         if (argc < 2) {
             printf("Correct command line: ");
             printf("%s <# threads> \n", argv[0]);
-            return -1;
+            MPI_Abort(MPI_COMM_WORLD, -1);
         }
     }
 
