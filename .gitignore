@@ -1,0 +1,6 @@
+# java file
+*.class
+*.jar
+
+# data file
+*/data*/*
