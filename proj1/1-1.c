@@ -7,44 +7,37 @@
 
 void My_Allgather(const void *sendbuf, int sendcount, MPI_Datatype sendtype, 
 				  void *recvbuf, int recvcount, MPI_Datatype recvtype, MPI_Comm comm){
-	int world_rank;
-	int world_size;
+	int rank;
+	int size;
 	MPI_Status status;
 	MPI_Request request;
 
-	MPI_Comm_size(comm, &world_size);
-	MPI_Comm_rank(comm, &world_rank);
+	MPI_Comm_size(comm, &size);
+	MPI_Comm_rank(comm, &rank);
 
 	int tsize;
     MPI_Type_size(recvtype, &tsize);
 
-	if (world_rank)
+	if (rank)
 		MPI_Isend(sendbuf, sendcount, sendtype, 0, ALLGATHER_TAG, comm, &request);
 
-	if (!world_rank) {
-		for (int i = 0; i < world_size; ++i) {
-			if (!i) {
+	if (!rank) {
+		for (int id = 0; id < size; ++id) {
+			if (!id) {
 				memcpy(recvbuf, sendbuf, recvcount);
 			}
 			else {
-				MPI_Recv(recvbuf + i * recvcount * tsize, recvcount, recvtype, i, ALLGATHER_TAG, comm, &status);
+				MPI_Recv(recvbuf + id * recvcount * tsize, recvcount, recvtype, id, ALLGATHER_TAG, comm, &status);
 			}
 		}
-		
-		for (int i = 1; i < world_size; ++i) {
-			MPI_Send(recvbuf, world_size * recvcount, sendtype, i, ALLGATHER_TAG, comm);
-		}
 	}
-	else
-	{		
-		MPI_Recv(recvbuf, world_size * sendcount, sendtype, 0, ALLGATHER_TAG, comm, &status);
-	}
+    MPI_Bcast(recvbuf, size * recvcount, sendtype, 0, comm);
 }
 
 int main(int argc, char* argv[]) {
 	int i;
-	int world_rank;
-	int world_size;
+	int rank;
+	int size;
 	int isend;
 	int *recv_buffer;
 	int *send_buffer;
@@ -55,11 +48,11 @@ int main(int argc, char* argv[]) {
 	double time_elapsed;
 
 	MPI_Init(&argc, &argv);
-	MPI_Comm_size(MPI_COMM_WORLD, &world_size);
-	MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
+	MPI_Comm_size(MPI_COMM_WORLD, &size);
+	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
 	if (argc != 2) {
-		if (!world_rank) {
+		if (!rank) {
 			printf("Usage: %s <send number>\n", argv[0]);
 			MPI_Abort(MPI_COMM_WORLD, -1);
 		}
@@ -67,39 +60,31 @@ int main(int argc, char* argv[]) {
 
 	int number_send = atoi(argv[1]);
 	send_buffer = malloc(sizeof(int) * number_send);
-	recv_buffer = malloc(sizeof(int) * number_send * world_size);
+	recv_buffer = malloc(sizeof(int) * number_send * size);
 	
 	for (int i = 0 ; i < number_send; ++i)
-		send_buffer[i] = i + number_send * world_rank;
-	// isend = world_rank + 1;
+		send_buffer[i] = i + number_send * rank;
 
+    MPI_Barrier(MPI_COMM_WORLD);
 	time_elapsed = -MPI_Wtime();
 	My_Allgather(send_buffer, number_send, MPI_INT, recv_buffer, number_send, MPI_INT, MPI_COMM_WORLD);
 	time_elapsed += MPI_Wtime();
 
-	if (!world_rank) {
-		/*
-		for (int i = 0; i < world_size * number_send; ++i)
-			printf("%d ", recv_buffer[i]);
-		printf("\n");
-		*/
+	if (!rank) {
 		printf("Time elapsed of my implemented all gather: %f\n", time_elapsed);
 	}
 
 	send_buffer = malloc(sizeof(int) * number_send);
-	recv_buffer = malloc(sizeof(int) * number_send * world_size);
+	recv_buffer = malloc(sizeof(int) * number_send * size);
 
 	for (int i = 0 ; i < number_send; ++i)
-		send_buffer[i] = i + number_send * world_rank;
+		send_buffer[i] = i + number_send * rank;
+
+    MPI_Barrier(MPI_COMM_WORLD);
 	time_elapsed = -MPI_Wtime();
 	MPI_Allgather(send_buffer, number_send, MPI_INT, recv_buffer, number_send, MPI_INT, MPI_COMM_WORLD);
 	time_elapsed += MPI_Wtime();
-	if (!world_rank) {
-		/*
-		for (int i = 0; i < world_size * number_send; ++i)
-			printf("%d ", recv_buffer[i]);
-		printf("\n");
-		*/
+	if (!rank) {
 		printf("Time elapsed of original implemented all gather: %f\n", time_elapsed);
 	}
 

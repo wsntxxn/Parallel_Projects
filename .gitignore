@@ -4,3 +4,6 @@
 
 # data file
 */data*/*
+
+# MPI multiple host configuration
+*/config

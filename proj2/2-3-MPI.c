@@ -120,7 +120,7 @@ int main(int argc, char* argv[]) {
 
         #pragma omp parallel for
         // calculate new value
-        for (int j = block_low; j <= block_high; ++j) {
+        for (int j = block_low; j < block_high; ++j) {
             v[j] = 0.0;
             for (int k = 0; k < graph -> nodes[j].in_degree; ++k) {
                 v[j] += v_old[graph -> nodes[j].parents[k]] / graph -> nodes[graph -> nodes[j].parents[k]].out_degree;
